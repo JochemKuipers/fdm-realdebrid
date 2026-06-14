@@ -55,6 +55,17 @@ Paste a URL into FDM's **Add Download** dialog:
 
 The add-on unrestricts the link through Real-Debrid and returns a direct download URL for FDM.
 
+## Firefox browser extension
+
+The add-on also works when downloads are captured from Firefox via the FDM extension.
+
+1. Install the [Free Download Manager extension](https://addons.mozilla.org/firefox/addon/free-download-manager/) in Firefox.
+2. In FDM, enable browser integration for Firefox.
+3. In FDM → **Add-ons** → settings, enable **Allow add-ons to use web browser cookies** (recommended for hosters that need session cookies).
+4. On a supported hoster page, click the normal download button — FDM should intercept the link and route it through Real-Debrid.
+
+When the browser sends a direct file URL, FDM uses the add-on's `isPossiblySupportedSource` handler. The embedded host list in `rd-domains.js` makes that work immediately without waiting for a network fetch.
+
 ## Manual test checklist
 
 1. **Invalid token**

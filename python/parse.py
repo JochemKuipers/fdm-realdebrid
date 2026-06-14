@@ -187,11 +187,11 @@ def handle_container(client, url):
     return container_playlist(url, links)
 
 
-def handle_torrent(client, config, url):
+def handle_torrent(client, config, url, cookies=""):
     if is_magnet(url):
         added = client.add_magnet(url)
     else:
-        torrent_bytes = client.download_bytes(url)
+        torrent_bytes = client.download_bytes(url, cookies)
         added = client.add_torrent_file(torrent_bytes)
 
     info = ensure_torrent_ready(client, config, added)
@@ -210,7 +210,7 @@ def handle_torrent(client, config, url):
     )
 
 
-def parse_url(url, mode="auto"):
+def parse_url(url, mode="auto", cookies=""):
     if is_rd_direct_url(url):
         return direct_download_result(url)
 
@@ -230,7 +230,7 @@ def parse_url(url, mode="auto"):
                 raise
 
     if is_magnet(url) or is_torrent_url(url):
-        return handle_torrent(client, config, url)
+        return handle_torrent(client, config, url, cookies)
 
     if is_container_url(url):
         return handle_container(client, url)
@@ -243,13 +243,13 @@ def main():
         emit_error("Missing URL argument")
 
     url = sys.argv[1].strip()
-    mode = sys.argv[2].strip() if len(sys.argv) > 2 else "auto"
+    cookies = sys.argv[2].strip() if len(sys.argv) > 2 else ""
 
     if not url:
         emit_error("URL argument is empty")
 
     try:
-        emit_result(parse_url(url, mode=mode))
+        emit_result(parse_url(url, mode="auto", cookies=cookies))
     except RealDebridError as error:
         emit_error(str(error))
     except Exception as error:

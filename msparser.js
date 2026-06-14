@@ -21,6 +21,17 @@ var msParser = (function () {
         "/collection/"
     ];
 
+    function embeddedDomains() {
+        if (typeof RD_EMBEDDED_DOMAINS !== "undefined" && RD_EMBEDDED_DOMAINS.length) {
+            return RD_EMBEDDED_DOMAINS;
+        }
+        return [];
+    }
+
+    function activeDomains() {
+        return cachedDomains || embeddedDomains();
+    }
+
     function hostnameFromUrl(url) {
         var match = /^https?:\/\/([^\/?#]+)/i.exec(url);
         if (!match) {
@@ -40,7 +51,7 @@ var msParser = (function () {
 
     function urlMatchesDomains(url, domains) {
         var hostname = hostnameFromUrl(url);
-        if (!hostname) {
+        if (!hostname || !domains || !domains.length) {
             return false;
         }
 
@@ -110,25 +121,30 @@ var msParser = (function () {
             isRdDirectUrl(url);
     }
 
-    function isSupportedByDomains(url) {
-        if (matchesSpecialPatterns(url)) {
-            return true;
+    function isHosterUrl(url) {
+        if (!/^https?:\/\//i.test(url)) {
+            return false;
         }
 
         if (looksLikeFolder(url)) {
             return false;
         }
 
-        if (!cachedDomains) {
-            return false;
+        if (matchesSpecialPatterns(url)) {
+            return true;
         }
 
-        return urlMatchesDomains(url, cachedDomains);
+        return urlMatchesDomains(url, activeDomains());
     }
 
-    function launchParser(scriptPath, url) {
+    function launchParser(scriptPath) {
         return function (obj) {
-            return launchPythonScript(obj.requestId, obj.interactive, scriptPath, [obj.url])
+            var args = [obj.url];
+            if (obj.cookie) {
+                args.push(obj.cookie);
+            }
+
+            return launchPythonScript(obj.requestId, obj.interactive, scriptPath, args)
                 .then(function (result) {
                     if (result.exitCode !== 0) {
                         return Promise.reject({
@@ -151,42 +167,26 @@ var msParser = (function () {
 
     ensureDomainsLoaded()
         .catch(function (error) {
-            console.warn("Failed to preload Real-Debrid host list:", error.error || error.message || error);
+            console.warn("Failed to refresh Real-Debrid host list:", error.error || error.message || error);
         });
 
     return {
         parse: launchParser("python/parse.py"),
 
         isSupportedSource: function (url) {
-            if (matchesSpecialPatterns(url)) {
-                return true;
-            }
-
-            if (looksLikeFolder(url)) {
-                return false;
-            }
-
-            if (cachedDomains && isSupportedByDomains(url)) {
-                return true;
-            }
-
-            ensureDomainsLoaded()
-                .then(function () {
-                    /* warm cache for later checks */
-                })
-                .catch(function (error) {
-                    console.warn("Failed to load Real-Debrid host list:", error.error || error.message || error);
-                });
-
-            return false;
+            return isHosterUrl(url);
         },
 
         supportedSourceCheckPriority: function () {
             return PRIORITY;
         },
 
-        isPossiblySupportedSource: function () {
-            return false;
+        isPossiblySupportedSource: function (obj) {
+            if (!obj || !obj.url) {
+                return false;
+            }
+
+            return isHosterUrl(obj.url);
         },
 
         minIntevalBetweenQueryInfoDownloads: function () {

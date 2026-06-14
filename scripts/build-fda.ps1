@@ -11,11 +11,15 @@ if (-not (Test-Path $dist)) {
 $items = @(
     "manifest.json",
     "icon.png",
+    "rd-domains.js",
     "msparser.js",
     "msbatchparser.js",
     "config.example.json",
     "python"
 )
+
+Write-Host "Refreshing Real-Debrid host domains..."
+python (Join-Path $root "scripts\update-rd-domains.py")
 
 $staging = Join-Path $dist "staging"
 if (Test-Path $staging) {

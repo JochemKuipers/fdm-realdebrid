@@ -149,8 +149,11 @@ class RealDebridClient:
         )
 
     @staticmethod
-    def download_bytes(url):
-        request = urllib.request.Request(url, headers={"User-Agent": "fdm-realdebrid/1.0"})
+    def download_bytes(url, cookies=""):
+        headers = {"User-Agent": "fdm-realdebrid/1.0"}
+        if cookies:
+            headers["Cookie"] = cookies.replace("\n", "; ")
+        request = urllib.request.Request(url, headers=headers)
         try:
             with urllib.request.urlopen(request, timeout=120) as response:
                 return response.read()

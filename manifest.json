@@ -3,11 +3,12 @@
   "author": "jochem",
   "name": "Real-Debrid",
   "description": "Download from Real-Debrid supported hosters, folders, magnets, torrents, and container files.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "icon": "icon.png",
   "mediaParser": true,
   "mediaListParser": true,
   "scripts": [
+    "rd-domains.js",
     "msparser.js",
     "msbatchparser.js"
   ],
