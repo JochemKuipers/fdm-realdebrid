@@ -40,7 +40,7 @@ def emit_error(message):
 
 
 def is_magnet(url):
-    return url.lower().startswith("magnet:?")
+    return url.lower().startswith("magnet:")
 
 
 def is_torrent_url(url):
@@ -188,6 +188,10 @@ def handle_container(client, url):
 
 
 def handle_torrent(client, config, url, cookies=""):
+    cached = get_cached(url)
+    if cached:
+        return cached
+
     if is_magnet(url):
         added = client.add_magnet(url)
     else:
@@ -203,11 +207,13 @@ def handle_torrent(client, config, url, cookies=""):
         except RealDebridError:
             pass
 
-    return torrent_playlist(
+    result = torrent_playlist(
         webpage_url=url,
         unrestricted_items=unrestricted,
         title=info.get("filename") or info.get("original_filename") or "Real-Debrid torrent",
     )
+    set_cached(url, result)
+    return result
 
 
 def parse_url(url, mode="auto", cookies=""):

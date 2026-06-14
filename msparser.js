@@ -9,7 +9,7 @@ var msParser = (function () {
 
   var CONTAINER_PATTERN = /\.(dlc|ccf|ccfz|rsdf)(\?|$)/i;
   var TORRENT_PATTERN = /\.torrent(\?|$)/i;
-  var MAGNET_PATTERN = /^magnet:\?/i;
+  var MAGNET_PATTERN = /^magnet:/i;
   var RD_CDN_PATTERN = /(^|\.)rdeb\.io$/i;
 
   var FOLDER_MARKERS = [
@@ -120,26 +120,37 @@ var msParser = (function () {
     );
   }
 
-  function matchesSpecialPatterns(url) {
-    return (
-      MAGNET_PATTERN.test(url) ||
-      TORRENT_PATTERN.test(url) ||
-      CONTAINER_PATTERN.test(url) ||
-      isRdDirectUrl(url)
-    );
+  function isMagnetUrl(url) {
+    return MAGNET_PATTERN.test(url);
   }
 
-  function isHosterUrl(url) {
+  function isTorrentFileUrl(url) {
+    return /^https?:\/\//i.test(url) && TORRENT_PATTERN.test(url);
+  }
+
+  function isSupportedUrl(url) {
+    if (!url) {
+      return false;
+    }
+
+    if (isMagnetUrl(url) || isTorrentFileUrl(url)) {
+      return true;
+    }
+
+    if (isRdDirectUrl(url)) {
+      return true;
+    }
+
+    if (CONTAINER_PATTERN.test(url) && /^https?:\/\//i.test(url)) {
+      return true;
+    }
+
     if (!/^https?:\/\//i.test(url)) {
       return false;
     }
 
     if (looksLikeFolder(url)) {
       return false;
-    }
-
-    if (matchesSpecialPatterns(url)) {
-      return true;
     }
 
     return urlMatchesDomains(url, activeDomains());
@@ -188,7 +199,7 @@ var msParser = (function () {
     parse: launchParser("python/parse.py"),
 
     isSupportedSource: function (url) {
-      return isHosterUrl(url);
+      return isSupportedUrl(url);
     },
 
     supportedSourceCheckPriority: function () {
@@ -200,7 +211,7 @@ var msParser = (function () {
         return false;
       }
 
-      return isHosterUrl(obj.url);
+      return isSupportedUrl(obj.url);
     },
 
     minIntevalBetweenQueryInfoDownloads: function () {
@@ -208,7 +219,7 @@ var msParser = (function () {
     },
 
     overrideUrlPolicy: function (url) {
-      return isRdDirectUrl(url) || MAGNET_PATTERN.test(url);
+      return isRdDirectUrl(url) || isMagnetUrl(url);
     },
   };
 })();

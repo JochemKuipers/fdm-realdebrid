@@ -45,12 +45,14 @@ Free Download Manager add-on that uses [Real-Debrid](https://real-debrid.com/) t
 
 Paste a URL into FDM's **Add Download** dialog:
 
-| URL type | Example |
-|----------|---------|
-| Hoster link | `https://rapidgator.net/file/...` |
-| Folder link | Mega/Mediafire folder URLs |
-| Magnet | `magnet:?xt=urn:btih:...` |
-| Torrent file | `https://example.com/file.torrent` |
+| URL type     | Example                                                     |
+| ------------ | ----------------------------------------------------------- |
+| Hoster link  | `https://rapidgator.net/file/...`                           |
+| Folder link  | Mega/Mediafire folder URLs                                  |
+| Magnet       | `magnet:?xt=urn:btih:...` (paste into FDM **Add Download**) |
+| Torrent file | `https://example.com/file.torrent`                          |
+
+**Magnet links:** paste the full magnet URL into FDM's **Add Download** dialog (Ctrl+N). FDM may also offer its built-in torrent handler for magnets — if prompted, the Real-Debrid add-on should take priority. Processing can take several minutes while Real-Debrid fetches the torrent; keep FDM open and wait for the dialog to finish.
 | Container | `.dlc`, `.ccf`, `.ccfz`, `.rsdf` links |
 
 The add-on unrestricts the link through Real-Debrid and returns a direct download URL for FDM.
