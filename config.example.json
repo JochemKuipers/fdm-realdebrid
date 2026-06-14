@@ -1,0 +1,8 @@
+{
+  "apiToken": "PASTE_YOUR_TOKEN_HERE",
+  "useRemoteTraffic": false,
+  "selectAllTorrentFiles": true,
+  "deleteTorrentAfter": false,
+  "torrentPollIntervalSec": 5,
+  "torrentMaxWaitSec": 900
+}
