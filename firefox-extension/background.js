@@ -18,7 +18,7 @@ browser.action.onClicked.addListener(function () {
     enabled ? "Magnet capture enabled" : "Magnet capture disabled",
     enabled
       ? "Magnet links will be sent to FDM."
-      : "Magnet links will use the browser default handler."
+      : "Magnet links will use the browser default handler.",
   );
 });
 
@@ -42,7 +42,7 @@ function notify(title, message) {
 function showError(error) {
   notify(
     "FDM magnet handoff failed",
-    String(error && error.message ? error.message : error)
+    String(error && error.message ? error.message : error),
   );
 }
 
@@ -56,7 +56,7 @@ function sendMagnetToFdm(magnetUrl) {
       notify(
         "Sent to Real-Debrid",
         response.message ||
-          "FDM will add the download(s) when Real-Debrid finishes (this can take several minutes)."
+          "FDM will add the download(s) when Real-Debrid finishes (this can take several minutes).",
       );
       return response;
     });

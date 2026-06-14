@@ -54,13 +54,13 @@ When FDM receives the magnet, wait while Real-Debrid processes the torrent (this
 
 ## Troubleshooting
 
-| Problem | Fix |
-|---------|-----|
+| Problem                                               | Fix                                                                                                    |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
 | "No such native application com.fdmrealdebrid.magnet" | Re-run `install-native-host.ps1` (Windows needs registry registration), then **fully restart Firefox** |
-| "Could not find fdm.exe" | Install FDM or edit `FDM_CANDIDATES` in `native-host/fdm_rd_magnet.py` |
-| FDM uses built-in torrent instead of Real-Debrid | Re-run `install-native-host.ps1` so the updated native host is installed |
-| Worker failed silently | Check `%LOCALAPPDATA%\fdm-realdebrid\native-host\magnet-worker.log` |
-| Extension disappears after restart | Temporary add-ons unload on restart — reload via `about:debugging` |
+| "Could not find fdm.exe"                              | Install FDM or edit `FDM_CANDIDATES` in `native-host/fdm_rd_magnet.py`                                 |
+| FDM uses built-in torrent instead of Real-Debrid      | Re-run `install-native-host.ps1` so the updated native host is installed                               |
+| Worker failed silently                                | Check `%LOCALAPPDATA%\fdm-realdebrid\native-host\magnet-worker.log`                                    |
+| Extension disappears after restart                    | Temporary add-ons unload on restart — reload via `about:debugging`                                     |
 
 ## Files
 
