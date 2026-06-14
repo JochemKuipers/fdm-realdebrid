@@ -68,6 +68,16 @@ The add-on also works when downloads are captured from Firefox via the FDM exten
 
 When the browser sends a direct file URL, FDM uses the add-on's `isPossiblySupportedSource` handler. The embedded host list in `rd-domains.js` makes that work immediately without waiting for a network fetch.
 
+## Firefox magnet links
+
+HTTP hoster links work through the official FDM Firefox extension. **Magnet links need the companion extension** in [`firefox-extension/`](firefox-extension/README.md):
+
+1. Run `firefox-extension/scripts/install-native-host.ps1`
+2. Load `firefox-extension/manifest.json` via `about:debugging`
+3. Restart Firefox
+
+Clicking a magnet link sends it to FDM via `fdm.exe -fs`, and the Real-Debrid add-on processes it there.
+
 ## Manual test checklist
 
 1. **Invalid token**
