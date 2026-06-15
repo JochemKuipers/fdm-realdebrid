@@ -4,15 +4,13 @@ import struct
 import subprocess
 import sys
 
-FDM_CANDIDATES = [
-    r"C:\Program Files\Softdeluxe\Free Download Manager\fdm.exe",
-    os.path.expandvars(
-        r"%LOCALAPPDATA%\Programs\Softdeluxe\Free Download Manager\fdm.exe"
-    ),
-]
+host_dir = os.path.dirname(os.path.abspath(__file__))
+repo_python = os.path.abspath(os.path.join(host_dir, "..", "..", "python"))
+for path in (host_dir, repo_python):
+    if path not in sys.path:
+        sys.path.insert(0, path)
 
-CREATE_NO_WINDOW = 0x08000000
-DETACHED_PROCESS = 0x00000008
+from platform_paths import detached_popen_kwargs, find_fdm
 
 
 def read_message():
@@ -35,13 +33,6 @@ def send_message(message):
     sys.stdout.buffer.flush()
 
 
-def find_fdm():
-    for path in FDM_CANDIDATES:
-        if os.path.isfile(path):
-            return path
-    return None
-
-
 def extract_url(message):
     if isinstance(message, str):
         return message.strip()
@@ -61,11 +52,11 @@ def spawn_worker(magnet_url):
 
     subprocess.Popen(
         [sys.executable, worker_py, magnet_url],
-        creationflags=DETACHED_PROCESS | CREATE_NO_WINDOW,
         close_fds=True,
         stdin=subprocess.DEVNULL,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
+        **detached_popen_kwargs(),
     )
 
 
@@ -82,7 +73,7 @@ def main():
         return
 
     if not find_fdm():
-        send_message({"success": False, "error": "Could not find fdm.exe"})
+        send_message({"success": False, "error": "Could not find fdm"})
         return
 
     try:

@@ -1,34 +1,18 @@
 import json
 import os
-import struct
 import subprocess
 import sys
 from datetime import datetime
 
-FDM_CANDIDATES = [
-    r"C:\Program Files\Softdeluxe\Free Download Manager\fdm.exe",
-    os.path.expandvars(
-        r"%LOCALAPPDATA%\Programs\Softdeluxe\Free Download Manager\fdm.exe"
-    ),
-]
+host_dir = os.path.dirname(os.path.abspath(__file__))
+repo_python = os.path.abspath(os.path.join(host_dir, "..", "..", "python"))
+for path in (host_dir, repo_python):
+    if path not in sys.path:
+        sys.path.insert(0, path)
 
-ADDON_CANDIDATES = [
-    os.path.join(
-        os.environ.get("LOCALAPPDATA", ""),
-        "Softdeluxe",
-        "Free Download Manager",
-        "plugins",
-        "fdm-realdebrid",
-    ),
-    os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")),
-]
+from platform_paths import app_data_dir, find_addon_root, find_fdm
 
-LOG_PATH = os.path.join(
-    os.environ.get("LOCALAPPDATA", ""),
-    "fdm-realdebrid",
-    "native-host",
-    "magnet-worker.log",
-)
+LOG_PATH = os.path.join(app_data_dir(), "native-host", "magnet-worker.log")
 
 
 def log(message):
@@ -39,21 +23,6 @@ def log(message):
             handle.write(f"[{stamp}] {message}\n")
     except OSError:
         pass
-
-
-def find_fdm():
-    for path in FDM_CANDIDATES:
-        if os.path.isfile(path):
-            return path
-    return None
-
-
-def find_addon_root():
-    for path in ADDON_CANDIDATES:
-        parse_py = os.path.join(path, "python", "parse.py")
-        if os.path.isfile(parse_py):
-            return path
-    return None
 
 
 def collect_download_urls(result):
@@ -74,7 +43,7 @@ def collect_download_urls(result):
 def send_to_fdm(urls):
     fdm_path = find_fdm()
     if not fdm_path:
-        raise RuntimeError("Could not find fdm.exe")
+        raise RuntimeError("Could not find fdm")
 
     for url in urls:
         subprocess.Popen(
@@ -86,7 +55,8 @@ def send_to_fdm(urls):
 
 
 def process_magnet(magnet_url):
-    addon_root = find_addon_root()
+    repo_root = os.path.abspath(os.path.join(host_dir, "..", ".."))
+    addon_root = find_addon_root(repo_root)
     if not addon_root:
         raise RuntimeError(
             "Real-Debrid FDM add-on not found. Install fdm-realdebrid in FDM first."

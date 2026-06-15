@@ -2,12 +2,13 @@ import json
 import os
 import time
 
+from platform_paths import app_data_dir
+
 DEFAULT_TTL_SEC = 4 * 60 * 60
 
 
 def _cache_dir():
-    base = os.environ.get("LOCALAPPDATA") or os.path.expanduser("~")
-    path = os.path.join(base, "fdm-realdebrid")
+    path = app_data_dir()
     try:
         os.makedirs(path, exist_ok=True)
     except OSError:

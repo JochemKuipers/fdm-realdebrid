@@ -13,6 +13,14 @@ Free Download Manager add-on that uses [Real-Debrid](https://real-debrid.com/) t
 
 1. Build the add-on package:
 
+   **Linux / macOS:**
+
+   ```bash
+   ./scripts/build-fda.sh
+   ```
+
+   **Windows (PowerShell):**
+
    ```powershell
    .\scripts\build-fda.ps1
    ```
@@ -72,11 +80,23 @@ When the browser sends a direct file URL, FDM uses the add-on's `isPossiblySuppo
 
 HTTP hoster links work through the official FDM Firefox extension. **Magnet links need the companion extension** in [`firefox-extension/`](firefox-extension/README.md):
 
-1. Run `firefox-extension/scripts/install-native-host.ps1`
+1. Run the native host installer:
+
+   **Linux / macOS:**
+
+   ```bash
+   ./firefox-extension/scripts/install-native-host.sh
+   ```
+
+   **Windows (PowerShell):**
+
+   ```powershell
+   .\firefox-extension\scripts\install-native-host.ps1
+   ```
 2. Load `firefox-extension/manifest.json` via `about:debugging`
 3. Restart Firefox
 
-Clicking a magnet link sends it to FDM via `fdm.exe -fs`, and the Real-Debrid add-on processes it there.
+Clicking a magnet link sends it to FDM via `fdm -fs`, and the Real-Debrid add-on processes it there.
 
 ## Manual test checklist
 
@@ -115,6 +135,7 @@ python/
   fdm_result.py
   parse.py
   parse_folder.py
+scripts/build-fda.sh
 scripts/build-fda.ps1
 ```
 

@@ -18,6 +18,7 @@ New-Item -ItemType Directory -Path $installDir -Force | Out-Null
 Copy-Item (Join-Path $nativeHostDir "fdm_rd_magnet.py") (Join-Path $installDir "fdm_rd_magnet.py") -Force
 Copy-Item (Join-Path $nativeHostDir "fdm_rd_magnet_worker.py") (Join-Path $installDir "fdm_rd_magnet_worker.py") -Force
 Copy-Item $cmdPath (Join-Path $installDir "fdm_rd_magnet.cmd") -Force
+Copy-Item (Join-Path $extensionRoot "..\python\platform_paths.py") (Join-Path $installDir "platform_paths.py") -Force
 
 $hostPath = Join-Path $installDir "fdm_rd_magnet.cmd"
 $hostPathJson = ($hostPath -replace "\\", "/")
