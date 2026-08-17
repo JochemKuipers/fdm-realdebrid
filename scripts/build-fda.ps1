@@ -35,6 +35,8 @@ foreach ($item in $items) {
     Copy-Item -Path $source -Destination (Join-Path $staging $item) -Recurse
 }
 
+python (Join-Path $root "python\config_loader.py") (Join-Path $staging "config.json")
+
 if (Test-Path $fda) {
     Remove-Item -Force $fda
 }
@@ -45,4 +47,3 @@ Rename-Item -Path (Join-Path $dist "fdm-realdebrid.zip") -NewName "fdm-realdebri
 Remove-Item -Recurse -Force $staging
 
 Write-Host "Built $fda"
-Write-Host "Copy config.example.json to config.json in the add-on folder after install, then add your API token."

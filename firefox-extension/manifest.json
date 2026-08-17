@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Real-Debrid Magnets for FDM",
-  "version": "1.1.5",
+  "version": "1.1.6",
   "description": "Capture magnet links, pick files, and watch Real-Debrid hand them to Free Download Manager.",
   "browser_specific_settings": {
     "gecko": {

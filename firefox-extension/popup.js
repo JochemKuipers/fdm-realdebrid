@@ -10,7 +10,7 @@ const STATUS_LABEL = {
   magnet_conversion: "converting magnet",
   waiting_files_selection: "pick files",
   needs_selection: "pick files",
-  downloading: "loading",
+  downloading: "RD fetching",
   compressing: "packing",
   uploading: "handing off",
   downloaded: "unpacking",
@@ -159,6 +159,17 @@ function renderJobs(jobs) {
         : "";
       const collapsed = isCollapsed(job);
       const fileCount = job.fileCount || fileList.length;
+      const pct = Math.max(0, Math.min(100, Number(job.progress) || 0));
+      const fetchBits = [];
+      if (isFetching(job) || pct) {
+        fetchBits.push(pct + "%");
+      }
+      if (job.speed) {
+        fetchBits.push(bytes(job.speed) + "/s");
+      }
+      if (job.seeders) {
+        fetchBits.push(job.seeders + " seeders");
+      }
 
       return (
         '<article class="waybill' +
@@ -172,12 +183,13 @@ function renderJobs(jobs) {
         escapeHtml((job.id || "").slice(0, 6).toUpperCase()) +
         '</span><span class="status">' +
         escapeHtml(STATUS_LABEL[job.status] || job.status || "") +
+        (fetchBits.length ? " · " + fetchBits.join(" · ") : "") +
         "</span></div>" +
         '<div class="name">' +
         escapeHtml(job.filename || job.hash || "torrent") +
         "</div>" +
         '<div class="bar" aria-hidden="true"><span style="width:' +
-        Math.max(0, Math.min(100, Number(job.progress) || 0)) +
+        pct +
         '%"></span></div>' +
         '<p class="cargo-n">' +
         (fileCount ? fileCount + " files · " : "") +
@@ -195,9 +207,22 @@ function renderJobs(jobs) {
     .join("");
 }
 
+function isFetching(job) {
+  return (
+    job.status === "magnet_conversion" ||
+    job.status === "queued" ||
+    job.status === "downloading" ||
+    job.status === "compressing" ||
+    job.status === "uploading"
+  );
+}
+
 function isCollapsed(job) {
   if (folds[job.id] !== undefined) {
     return folds[job.id];
+  }
+  if (isFetching(job)) {
+    return false;
   }
   return (job.fileCount || 0) > 8;
 }

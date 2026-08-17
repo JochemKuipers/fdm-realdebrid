@@ -354,6 +354,8 @@ def _job_summary(job):
         "torrent_id": job.get("torrent_id") or "",
         "status": job.get("status") or "",
         "progress": int(job.get("progress") or 0),
+        "speed": int(job.get("speed") or 0),
+        "seeders": int(job.get("seeders") or 0),
         "filename": job.get("filename") or "",
         "fileCount": len(job.get("files") or []),
         "error": job.get("error") or "",
@@ -402,6 +404,8 @@ def _wait(client, job_id, torrent_id, poll_interval, max_wait, done_statuses) ->
             job_id,
             status=status or "queued",
             progress=int(info.get("progress") or 0),
+            speed=int(info.get("speed") or 0),
+            seeders=int(info.get("seeders") or 0),
             filename=info.get("filename") or info.get("original_filename") or "",
             files=file_rows(info, set(current.get("cachedIds") or [])),
         )

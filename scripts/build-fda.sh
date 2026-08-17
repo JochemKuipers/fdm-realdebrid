@@ -33,6 +33,8 @@ for item in "${items[@]}"; do
     cp -r "$source" "$staging/$item"
 done
 
+python "$root/python/config_loader.py" "$staging/config.json"
+
 rm -f "$fda"
 (
     cd "$staging"
@@ -42,4 +44,3 @@ mv "$dist/fdm-realdebrid.zip" "$fda"
 rm -rf "$staging"
 
 echo "Built $fda"
-echo "Copy config.example.json to config.json in the add-on folder after install, then add your API token."

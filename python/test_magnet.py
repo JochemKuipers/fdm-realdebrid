@@ -1,6 +1,8 @@
+import json
 import os
 import tempfile
 
+from config_loader import DEFAULT_CONFIG, sync_config_file
 from magnet_job import (
     add_or_reuse,
     magnet_hash,
@@ -143,6 +145,24 @@ def test_instant_miss_still_adds():
     assert client.add_calls == 1
 
 
+def test_sync_config_keeps_token():
+    handle, path = tempfile.mkstemp(suffix=".json")
+    os.close(handle)
+    try:
+        with open(path, "w", encoding="utf-8") as handle:
+            json.dump({"apiToken": "keep-me"}, handle)
+        merged = sync_config_file(path)
+        assert merged["apiToken"] == "keep-me"
+        for key in DEFAULT_CONFIG:
+            assert key in merged
+        with open(path, encoding="utf-8") as handle:
+            saved = json.load(handle)
+        assert saved["apiToken"] == "keep-me"
+        assert os.path.isfile(path)
+    finally:
+        os.remove(path)
+
+
 if __name__ == "__main__":
     handle, path = tempfile.mkstemp(suffix=".json")
     os.close(handle)
@@ -152,6 +172,7 @@ if __name__ == "__main__":
         test_error_33_reuses_and_fast_path()
         test_enqueue_does_not_block()
         test_instant_miss_still_adds()
+        test_sync_config_keeps_token()
     finally:
         try:
             os.remove(path)

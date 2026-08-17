@@ -22,6 +22,8 @@ def slim_status(payload):
                 "torrent_id": job.get("torrent_id") or "",
                 "status": job.get("status") or "",
                 "progress": int(job.get("progress") or 0),
+                "speed": int(job.get("speed") or 0),
+                "seeders": int(job.get("seeders") or 0),
                 "filename": job.get("filename") or "",
                 "fileCount": job.get("fileCount", len(job.get("files") or [])),
                 "error": job.get("error") or "",
@@ -30,24 +32,6 @@ def slim_status(payload):
         )
     payload["jobs"] = jobs
     return payload
-
-
-def files_from_job(get_job, job_id, offset, limit):
-    job = get_job(job_id)
-    if not job:
-        raise KeyError(job_id)
-    files = job.get("files") or []
-    offset = max(0, int(offset))
-    limit = max(1, min(int(limit), 1500))
-    chunk = files[offset : offset + limit]
-    return {
-        "ok": True,
-        "jobId": job_id,
-        "files": chunk,
-        "offset": offset,
-        "total": len(files),
-        "more": offset + len(chunk) < len(files),
-    }
 
 
 def read_message():
@@ -68,26 +52,6 @@ def send_message(message):
     sys.stdout.buffer.write(struct.pack("=I", len(encoded)))
     sys.stdout.buffer.write(encoded)
     sys.stdout.buffer.flush()
-
-
-def slim_status(payload):
-    jobs = []
-    for job in payload.get("jobs") or []:
-        jobs.append(
-            {
-                "id": job.get("id"),
-                "hash": job.get("hash") or "",
-                "torrent_id": job.get("torrent_id") or "",
-                "status": job.get("status") or "",
-                "progress": int(job.get("progress") or 0),
-                "filename": job.get("filename") or "",
-                "fileCount": job.get("fileCount", len(job.get("files") or [])),
-                "error": job.get("error") or "",
-                "updatedAt": job.get("updatedAt") or 0,
-            }
-        )
-    payload["jobs"] = jobs
-    return payload
 
 
 def files_from_job(get_job, job_id, offset, limit):
