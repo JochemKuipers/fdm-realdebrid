@@ -50,7 +50,16 @@ function renderConfig(config, nativeOk) {
     ["add-on", !!config.addonFound, "ok", "missing", true],
     ["token", !!config.tokenSet, "set", "missing", true],
     ["remote", true, config.useRemoteTraffic ? "on" : "off", "", false],
-    ["poll", true, (config.torrentPollIntervalSec || 5) + "s / " + (config.torrentMaxWaitSec || 900) + "s", "", false],
+    [
+      "poll",
+      true,
+      (config.torrentPollIntervalSec || 5) +
+        "s / " +
+        (config.torrentMaxWaitSec || 900) +
+        "s",
+      "",
+      false,
+    ],
     ["delete", true, config.deleteTorrentAfter ? "on" : "off", "", false],
   ];
   const problems = [];
@@ -83,15 +92,11 @@ function renderConfig(config, nativeOk) {
 
   $("config-sum").textContent = problems.length
     ? problems.join(" · ")
-    : "all set";
+    : "all set (click to see details)";
   $("config-sum").className = "count" + (problems.length ? " bad" : " ok");
   $("config-sheet").classList.toggle("collapsed", !configOpen);
   $("config-fold").setAttribute("aria-expanded", configOpen ? "true" : "false");
 
-  if (config.error) {
-    $("banner").hidden = false;
-    $("banner").textContent = config.error;
-  }
 }
 
 function renderJobs(jobs) {
@@ -137,9 +142,12 @@ function renderJobs(jobs) {
         })
         .join("");
 
-      const allOn = picking && fileList.length > 0 && fileList.every(function (file) {
-        return fileChecked(job.id, file.id);
-      });
+      const allOn =
+        picking &&
+        fileList.length > 0 &&
+        fileList.every(function (file) {
+          return fileChecked(job.id, file.id);
+        });
       const actions = picking
         ? '<div class="actions"><button type="button" data-all="' +
           job.id +
@@ -178,7 +186,9 @@ function renderJobs(jobs) {
         '<div class="waybill-body">' +
         actions +
         (files ? '<ul class="files">' + files + "</ul>" : "") +
-        (job.error ? '<p class="error">' + escapeHtml(job.error) + "</p>" : "") +
+        (job.error
+          ? '<p class="error">' + escapeHtml(job.error) + "</p>"
+          : "") +
         "</div></article>"
       );
     })
@@ -247,8 +257,21 @@ function escapeHtml(value) {
     .replace(/"/g, "&quot;");
 }
 
+function setBanner(text) {
+  const next = text || "";
+  if (!next) {
+    $("banner").hidden = true;
+    $("banner").textContent = "";
+    return;
+  }
+  if ($("banner").textContent === next && !$("banner").hidden) {
+    return;
+  }
+  $("banner").textContent = next;
+  $("banner").hidden = false;
+}
+
 async function refresh() {
-  $("banner").hidden = true;
   try {
     const response = await native({ cmd: "status" });
     if (!response || response.ok === false) {
@@ -266,26 +289,28 @@ async function refresh() {
     if (needed.length) {
       renderJobs(lastJobs);
     }
+    setBanner((response.config && response.config.error) || "");
   } catch (error) {
     renderConfig({}, false);
-    $("banner").hidden = false;
-    $("banner").textContent = error.message || String(error);
-    $("jobs").innerHTML = "";
-    $("lane-count").textContent = "";
+    setBanner(error.message || String(error));
   }
 }
 
 async function sendSelection(jobId, files) {
-  $("banner").hidden = true;
   try {
-    const response = await native({ cmd: "selectFiles", jobId: jobId, files: files });
+    const response = await native({
+      cmd: "selectFiles",
+      jobId: jobId,
+      files: files,
+    });
     if (!response || response.ok === false) {
-      throw new Error((response && response.error) || "Could not send selection");
+      throw new Error(
+        (response && response.error) || "Could not send selection",
+      );
     }
     await refresh();
   } catch (error) {
-    $("banner").hidden = false;
-    $("banner").textContent = error.message || String(error);
+    setBanner(error.message || String(error));
   }
 }
 
@@ -301,7 +326,8 @@ $("capture").addEventListener("change", function () {
 });
 
 $("jobs").addEventListener("change", function (event) {
-  const jobId = event.target.getAttribute && event.target.getAttribute("data-job");
+  const jobId =
+    event.target.getAttribute && event.target.getAttribute("data-job");
   if (jobId) {
     rememberPicks(jobId);
   }

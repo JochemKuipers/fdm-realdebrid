@@ -24,6 +24,17 @@ body {
   font: 400 14px/1.35 "IBM Plex Sans Condensed", "Arial Narrow", sans-serif;
 }
 
+@media (min-width: 400px) {
+  html,
+  body {
+    width: auto;
+    max-width: 520px;
+    max-height: none;
+    min-height: 100vh;
+    margin: 0 auto;
+  }
+}
+
 body {
   overflow: auto;
   padding: 14px 14px 18px;

@@ -18,8 +18,7 @@
     .sendMessage({ type: "magnet", url: magnet, force: true })
     .then(function (response) {
       if (response && response.success) {
-        status.textContent = "Queued. Open the toolbar popup to pick files.";
-        window.close();
+        status.textContent = "Opening dock…";
         return;
       }
       status.textContent = (response && response.error) || "Could not queue this magnet.";
