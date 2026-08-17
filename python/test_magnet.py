@@ -7,6 +7,7 @@ from magnet_job import (
     add_or_reuse,
     magnet_hash,
     normalize_magnet,
+    save_store,
     start_torrent_job,
     try_instant,
 )
@@ -163,6 +164,24 @@ def test_sync_config_keeps_token():
         os.remove(path)
 
 
+def test_save_store_strips_files():
+    save_store(
+        {
+            "jobs": [
+                {
+                    "id": "fat",
+                    "status": "downloading",
+                    "files": [{"id": "1", "path": "/a"}] * 10,
+                }
+            ]
+        }
+    )
+    with open(os.environ["FDM_RD_JOBS"], encoding="utf-8") as handle:
+        stored = json.load(handle)
+    assert stored["jobs"][0]["files"] == []
+    assert stored["jobs"][0]["fileCount"] == 10
+
+
 if __name__ == "__main__":
     handle, path = tempfile.mkstemp(suffix=".json")
     os.close(handle)
@@ -173,6 +192,7 @@ if __name__ == "__main__":
         test_enqueue_does_not_block()
         test_instant_miss_still_adds()
         test_sync_config_keeps_token()
+        test_save_store_strips_files()
     finally:
         try:
             os.remove(path)

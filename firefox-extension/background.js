@@ -104,7 +104,7 @@ function maybeCloseDock(jobs) {
   let allDone = true;
   watchIds.forEach(function (id) {
     const job = byId[id];
-    if (!job || (job.status !== "done" && job.status !== "error")) {
+    if (!job || job.status !== "done") {
       allDone = false;
     }
   });

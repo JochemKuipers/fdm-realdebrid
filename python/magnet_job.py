@@ -98,15 +98,42 @@ def load_store():
     return _empty_store()
 
 
+KEEP_FILES = {"needs_selection", "waiting_files_selection"}
+
+
+def _as_int(value):
+    try:
+        return int(float(value))
+    except (TypeError, ValueError):
+        return 0
+
+
+def _store_job(job):
+    out = dict(job)
+    files = list(out.get("files") or [])
+    out["fileCount"] = _as_int(out.get("fileCount")) or len(files)
+    if out.get("status") not in KEEP_FILES:
+        out["files"] = []
+    return out
+
+
 def save_store(store):
     path = jobs_path()
     parent = os.path.dirname(path)
     if parent:
         os.makedirs(parent, exist_ok=True)
+    payload = {"jobs": [_store_job(job) for job in store.get("jobs", [])]}
     tmp = path + ".tmp"
-    with open(tmp, "w", encoding="utf-8") as handle:
-        json.dump(store, handle)
-    os.replace(tmp, path)
+    for attempt in range(8):
+        try:
+            with open(tmp, "w", encoding="utf-8") as handle:
+                json.dump(payload, handle)
+            os.replace(tmp, path)
+            return
+        except OSError:
+            if attempt == 7:
+                raise
+            time.sleep(0.05 * (attempt + 1))
 
 
 def get_job(job_id):
@@ -260,6 +287,7 @@ def new_job(url, torrent_id, hash_hex, filename, files, cached_ids):
         "progress": 0,
         "filename": filename or hash_hex or "torrent",
         "files": files,
+        "fileCount": len(files),
         "cachedIds": sorted(cached_ids),
         "selected": [],
         "error": "",
@@ -314,7 +342,7 @@ def start_torrent_job(client, config, url, cookies="", spawn=True):
 
     job = new_job(display_url, torrent_id, hash_hex, filename, files, cached_ids)
     job["status"] = info.get("status") or "queued"
-    job["progress"] = int(info.get("progress") or 0)
+    job["progress"] = _as_int(info.get("progress"))
     upsert_job(job)
     if spawn:
         spawn_worker(job["id"])
@@ -353,11 +381,11 @@ def _job_summary(job):
         "hash": job.get("hash") or "",
         "torrent_id": job.get("torrent_id") or "",
         "status": job.get("status") or "",
-        "progress": int(job.get("progress") or 0),
-        "speed": int(job.get("speed") or 0),
-        "seeders": int(job.get("seeders") or 0),
+        "progress": _as_int(job.get("progress")),
+        "speed": _as_int(job.get("speed")),
+        "seeders": _as_int(job.get("seeders")),
         "filename": job.get("filename") or "",
-        "fileCount": len(job.get("files") or []),
+        "fileCount": _as_int(job.get("fileCount")) or len(job.get("files") or []),
         "error": job.get("error") or "",
         "updatedAt": job.get("updatedAt") or 0,
     }
@@ -393,21 +421,20 @@ def job_files(job_id, offset=0, limit=FILE_PAGE):
 
 
 def _wait(client, job_id, torrent_id, poll_interval, max_wait, done_statuses) -> dict:
-    deadline = time.time() + max_wait
-    while time.time() < deadline:
+    last_sig = None
+    last_change = time.time()
+    while True:
         info = client.get_torrent_info(torrent_id)
         if not isinstance(info, dict):
             raise RealDebridError("Real-Debrid returned no torrent info")
         status = info.get("status")
-        current = get_job(job_id) or {}
         update_job(
             job_id,
             status=status or "queued",
-            progress=int(info.get("progress") or 0),
-            speed=int(info.get("speed") or 0),
-            seeders=int(info.get("seeders") or 0),
+            progress=_as_int(info.get("progress")),
+            speed=_as_int(info.get("speed")),
+            seeders=_as_int(info.get("seeders")),
             filename=info.get("filename") or info.get("original_filename") or "",
-            files=file_rows(info, set(current.get("cachedIds") or [])),
         )
         if status in done_statuses:
             return info
@@ -415,8 +442,14 @@ def _wait(client, job_id, torrent_id, poll_interval, max_wait, done_statuses) ->
             raise RealDebridError(f"Torrent failed on Real-Debrid ({status})")
         if status not in TORRENT_WAIT_STATUSES and status is not None:
             raise RealDebridError(f"Unexpected torrent status: {status}")
+        sig = (status, info.get("progress"))
+        now = time.time()
+        if sig != last_sig:
+            last_sig = sig
+            last_change = now
+        elif now - last_change > max_wait:
+            raise RealDebridError("Torrent still processing on Real-Debrid — try again later")
         time.sleep(poll_interval)
-    raise RealDebridError("Torrent still processing on Real-Debrid — try again later")
 
 
 def _wait_for_selection(job_id):
