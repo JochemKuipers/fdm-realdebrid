@@ -344,11 +344,50 @@ def enqueue_url(url, cookies="", spawn=True):
     return {"ok": True, "jobId": job["id"], "fastPath": False}
 
 
+FILE_PAGE = 1500
+
+
+def _job_summary(job):
+    return {
+        "id": job.get("id"),
+        "hash": job.get("hash") or "",
+        "torrent_id": job.get("torrent_id") or "",
+        "status": job.get("status") or "",
+        "progress": int(job.get("progress") or 0),
+        "filename": job.get("filename") or "",
+        "fileCount": len(job.get("files") or []),
+        "error": job.get("error") or "",
+        "updatedAt": job.get("updatedAt") or 0,
+    }
+
+
 def status_payload():
     config = public_config()
     config["fdmFound"] = bool(find_fdm())
     config["addonFound"] = bool(find_addon_root())
-    return {"ok": True, "config": config, "jobs": load_store().get("jobs", [])}
+    return {
+        "ok": True,
+        "config": config,
+        "jobs": [_job_summary(job) for job in load_store().get("jobs", [])],
+    }
+
+
+def job_files(job_id, offset=0, limit=FILE_PAGE):
+    job = get_job(job_id)
+    if not job:
+        raise KeyError(job_id)
+    files = job.get("files") or []
+    offset = max(0, int(offset))
+    limit = max(1, min(int(limit), FILE_PAGE))
+    chunk = files[offset : offset + limit]
+    return {
+        "ok": True,
+        "jobId": job_id,
+        "files": chunk,
+        "offset": offset,
+        "total": len(files),
+        "more": offset + len(chunk) < len(files),
+    }
 
 
 def _wait(client, job_id, torrent_id, poll_interval, max_wait, done_statuses):

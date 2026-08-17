@@ -52,8 +52,17 @@ h2 {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
+  gap: 10px;
   padding-bottom: 12px;
   border-bottom: 1px dashed #3a434b;
+}
+
+.mark {
+  display: block;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  flex: none;
 }
 
 .eyebrow {
@@ -108,10 +117,21 @@ h2 {
   margin-top: 16px;
 }
 
+.config-fold {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.sheet.collapsed .meta {
+  display: none;
+}
+
 .meta {
   display: grid;
-  grid-template-columns: 7.5rem 1fr;
-  gap: 4px 10px;
+  grid-template-columns: 4.5rem 1fr 4.5rem 1fr;
+  gap: 3px 8px;
   margin: 8px 0 0;
 }
 
@@ -172,6 +192,39 @@ h2 {
     var(--hull) 0 7px,
     transparent 7px 16px
   );
+}
+
+.fold {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: 400;
+  letter-spacing: inherit;
+  text-transform: none;
+  text-align: left;
+  cursor: pointer;
+}
+
+.fold:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 2px;
+}
+
+.cargo-n {
+  margin: 6px 0 0;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #6b6256;
+}
+
+.waybill.collapsed .waybill-body {
+  display: none;
 }
 
 .waybill-top {
@@ -253,7 +306,11 @@ h2 {
 .actions {
   display: flex;
   gap: 8px;
-  margin-top: 10px;
+  margin: 10px 0 0;
+}
+
+.actions + .files {
+  margin-top: 8px;
 }
 
 button {

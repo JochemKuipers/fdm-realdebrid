@@ -12,6 +12,44 @@ for path in (host_dir, repo_python):
 from platform_paths import find_addon_root
 
 
+def slim_status(payload):
+    jobs = []
+    for job in payload.get("jobs") or []:
+        jobs.append(
+            {
+                "id": job.get("id"),
+                "hash": job.get("hash") or "",
+                "torrent_id": job.get("torrent_id") or "",
+                "status": job.get("status") or "",
+                "progress": int(job.get("progress") or 0),
+                "filename": job.get("filename") or "",
+                "fileCount": job.get("fileCount", len(job.get("files") or [])),
+                "error": job.get("error") or "",
+                "updatedAt": job.get("updatedAt") or 0,
+            }
+        )
+    payload["jobs"] = jobs
+    return payload
+
+
+def files_from_job(get_job, job_id, offset, limit):
+    job = get_job(job_id)
+    if not job:
+        raise KeyError(job_id)
+    files = job.get("files") or []
+    offset = max(0, int(offset))
+    limit = max(1, min(int(limit), 1500))
+    chunk = files[offset : offset + limit]
+    return {
+        "ok": True,
+        "jobId": job_id,
+        "files": chunk,
+        "offset": offset,
+        "total": len(files),
+        "more": offset + len(chunk) < len(files),
+    }
+
+
 def read_message():
     raw_length = sys.stdin.buffer.read(4)
     if not raw_length:
@@ -32,6 +70,44 @@ def send_message(message):
     sys.stdout.buffer.flush()
 
 
+def slim_status(payload):
+    jobs = []
+    for job in payload.get("jobs") or []:
+        jobs.append(
+            {
+                "id": job.get("id"),
+                "hash": job.get("hash") or "",
+                "torrent_id": job.get("torrent_id") or "",
+                "status": job.get("status") or "",
+                "progress": int(job.get("progress") or 0),
+                "filename": job.get("filename") or "",
+                "fileCount": job.get("fileCount", len(job.get("files") or [])),
+                "error": job.get("error") or "",
+                "updatedAt": job.get("updatedAt") or 0,
+            }
+        )
+    payload["jobs"] = jobs
+    return payload
+
+
+def files_from_job(get_job, job_id, offset, limit):
+    job = get_job(job_id)
+    if not job:
+        raise KeyError(job_id)
+    files = job.get("files") or []
+    offset = max(0, int(offset))
+    limit = max(1, min(int(limit), 1500))
+    chunk = files[offset : offset + limit]
+    return {
+        "ok": True,
+        "jobId": job_id,
+        "files": chunk,
+        "offset": offset,
+        "total": len(files),
+        "more": offset + len(chunk) < len(files),
+    }
+
+
 def addon_python():
     addon_root = find_addon_root()
     if not addon_root:
@@ -49,9 +125,14 @@ def import_jobs():
         addon_python()
     except RuntimeError:
         pass
-    from magnet_job import enqueue_url, set_selection, status_payload
+    from magnet_job import enqueue_url, get_job, set_selection, status_payload
 
-    return enqueue_url, set_selection, status_payload
+    try:
+        from magnet_job import job_files
+    except ImportError:
+        job_files = None
+
+    return enqueue_url, get_job, job_files, set_selection, status_payload
 
 
 def handle(message):
@@ -63,7 +144,7 @@ def handle(message):
         cmd = "enqueue"
 
     try:
-        enqueue_url, set_selection, status_payload = import_jobs()
+        enqueue_url, get_job, job_files, set_selection, status_payload = import_jobs()
     except ImportError:
         if cmd == "status":
             from platform_paths import find_addon_root, find_fdm
@@ -87,7 +168,17 @@ def handle(message):
         )
 
     if cmd == "status":
-        return status_payload()
+        return slim_status(status_payload())
+
+    if cmd == "files":
+        job_id = message.get("jobId") or message.get("id")
+        if not job_id:
+            raise ValueError("Missing jobId")
+        offset = message.get("offset") or 0
+        limit = message.get("limit") or 1500
+        if job_files:
+            return job_files(job_id, offset=offset, limit=limit)
+        return files_from_job(get_job, job_id, offset, limit)
 
     if cmd == "selectFiles":
         job_id = message.get("jobId") or message.get("id")

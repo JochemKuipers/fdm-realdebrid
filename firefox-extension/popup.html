@@ -7,6 +7,7 @@
   </head>
   <body>
     <header class="mast">
+      <img class="mark" src="icons/magnet-rd-logo.svg" width="40" height="40" alt="" />
       <div>
         <p class="eyebrow">Real-Debrid · FDM</p>
         <h1>Dock</h1>
@@ -19,8 +20,11 @@
 
     <p id="banner" class="banner" hidden></p>
 
-    <section class="sheet" aria-labelledby="configured-title">
-      <h2 id="configured-title">Configured</h2>
+    <section class="sheet collapsed" id="config-sheet" aria-labelledby="configured-title">
+      <button type="button" class="fold config-fold" id="config-fold" aria-expanded="false">
+        <h2 id="configured-title">Configured</h2>
+        <p id="config-sum" class="count"></p>
+      </button>
       <dl id="config" class="meta"></dl>
     </section>
 

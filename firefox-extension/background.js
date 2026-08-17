@@ -72,7 +72,7 @@ browser.runtime.onMessage.addListener(function (message, sender, sendResponse) {
     return false;
   }
 
-  if (!enabled) {
+  if (!enabled && !message.force) {
     sendResponse({ success: false, skipped: true });
     return false;
   }

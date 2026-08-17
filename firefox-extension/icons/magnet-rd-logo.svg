@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <linearGradient id="magnetGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E8412C"/>
+      <stop offset="100%" stop-color="#C4261A"/>
+    </linearGradient>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1E2530"/>
+      <stop offset="100%" stop-color="#12161D"/>
+    </linearGradient>
+    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#000000" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+
+  <!-- background -->
+  <rect x="0" y="0" width="128" height="128" rx="26" fill="url(#bgGrad)"/>
+
+  <!-- magnet body (horseshoe) -->
+  <g filter="url(#softShadow)">
+    <path d="M 40 30
+             L 40 66
+             A 24 24 0 0 0 88 66
+             L 88 30"
+          fill="none"
+          stroke="url(#magnetGrad)"
+          stroke-width="16"
+          stroke-linecap="square"/>
+
+    <!-- magnet poles (silver tips) -->
+    <rect x="32" y="16" width="16" height="20" rx="2" fill="#D7DCE2"/>
+    <rect x="80" y="16" width="16" height="20" rx="2" fill="#D7DCE2"/>
+    <rect x="32" y="16" width="16" height="8" rx="2" fill="#9AA3AD"/>
+    <rect x="80" y="16" width="16" height="8" rx="2" fill="#9AA3AD"/>
+  </g>
+
+  <!-- download arrow, integrated into the magnet's open gap, pointing down into a receiving tray (Real-Debrid hand-off) -->
+  <g filter="url(#softShadow)">
+    <path d="M 64 40 L 64 82" stroke="#4FC3F7" stroke-width="8" stroke-linecap="round"/>
+    <path d="M 46 68 L 64 90 L 82 68" fill="none" stroke="#4FC3F7" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- receiving tray / RD hand-off base -->
+  <rect x="30" y="98" width="68" height="10" rx="5" fill="#4FC3F7" opacity="0.85"/>
+</svg>

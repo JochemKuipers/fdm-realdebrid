@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Real-Debrid Magnets for FDM",
-  "version": "1.1.0",
+  "version": "1.1.4",
   "description": "Capture magnet links, pick files, and watch Real-Debrid hand them to Free Download Manager.",
   "browser_specific_settings": {
     "gecko": {
@@ -34,15 +34,21 @@
       "all_frames": true
     }
   ],
+  "protocol_handlers": [
+    {
+      "protocol": "magnet",
+      "name": "Real-Debrid Magnets for FDM",
+      "uriTemplate": "/handler.html?url=%s"
+    }
+  ],
   "action": {
     "default_title": "Magnet dock",
     "default_popup": "popup.html",
-    "default_icon": {
-      "48": "icons/icon-48.png"
-    }
+    "default_icon": "icons/magnet-rd-logo.svg"
   },
   "icons": {
-    "48": "icons/icon-48.png"
+    "48": "icons/magnet-rd-logo.svg",
+    "128": "icons/magnet-rd-logo.svg"
   },
   "content_security_policy": {
     "extension_pages": "script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com;"
