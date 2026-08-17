@@ -1,4 +1,5 @@
 import os
+import urllib.parse
 
 VIDEO_EXTENSIONS = {
     "mp4",
@@ -24,6 +25,29 @@ AUDIO_EXTENSIONS = {
     "opus",
     "wma",
 }
+
+
+def safe_filename(name):
+    name = urllib.parse.unquote(str(name or ""))
+    name = os.path.basename(name.replace("\\", "/")).strip()
+    for char in '<>:"/\\|?*':
+        name = name.replace(char, "_")
+    return name.strip(" .")
+
+
+def named_download_url(url, filename):
+    name = safe_filename(filename)
+    parsed = urllib.parse.urlsplit(url)
+    parts = parsed.path.rsplit("/", 1)
+    if not name:
+        name = safe_filename(parts[-1] if parts else "")
+    if not name or not parts or not parts[-1]:
+        return url
+    prefix = parts[0] if len(parts) == 2 else ""
+    new_path = (prefix + "/" if prefix else "/") + name
+    return urllib.parse.urlunsplit(
+        (parsed.scheme, parsed.netloc, new_path, parsed.query, parsed.fragment)
+    )
 
 
 def extension_from_filename(filename):

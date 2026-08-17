@@ -1,10 +1,9 @@
 import json
-import os
 import sys
 import urllib.parse
 
 from config_loader import load_config
-from fdm_result import container_playlist, folder_playlist, single_media
+from fdm_result import container_playlist, folder_playlist, named_download_url, safe_filename, single_media
 from magnet_job import QueuedJob, load_store, start_torrent_job
 from result_cache import get_cached, set_cached
 from rd_client import RealDebridClient, RealDebridError
@@ -44,7 +43,7 @@ def is_rd_direct_url(url):
 
 
 def direct_download_result(url):
-    filename = os.path.basename(urllib.parse.urlparse(url).path) or "download"
+    filename = safe_filename(urllib.parse.urlparse(url).path) or "download"
     return single_media(
         title=filename,
         webpage_url=url,
@@ -85,6 +84,7 @@ def handle_hoster(client, config, url):
     download_url = result.get("download")
     if not download_url:
         raise RealDebridError("Real-Debrid did not return a download link")
+    download_url = named_download_url(download_url, result.get("filename"))
 
     fdm_result = single_media(
         title=result.get("filename") or url,

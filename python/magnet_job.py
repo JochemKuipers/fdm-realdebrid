@@ -9,7 +9,7 @@ import urllib.parse
 import uuid
 
 from config_loader import load_config, public_config
-from fdm_result import torrent_playlist
+from fdm_result import torrent_playlist, named_download_url
 from platform_paths import app_data_dir, detached_popen_kwargs, find_addon_root, find_fdm
 from rd_client import RealDebridClient, RealDebridError
 
@@ -249,6 +249,10 @@ def unrestrict_links(client, config, info):
         result = client.unrestrict_link(link, remote=config["useRemoteTraffic"])
         if not result.get("download"):
             raise RealDebridError("Real-Debrid did not return a download link")
+        result = dict(result)
+        result["download"] = named_download_url(
+            result["download"], result.get("filename")
+        )
         unrestricted.append(result)
 
     if config["deleteTorrentAfter"]:

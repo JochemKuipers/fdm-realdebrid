@@ -3,6 +3,7 @@ import os
 import tempfile
 
 from config_loader import DEFAULT_CONFIG, sync_config_file
+from fdm_result import named_download_url, safe_filename
 from magnet_job import (
     add_or_reuse,
     magnet_hash,
@@ -182,6 +183,21 @@ def test_save_store_strips_files():
     assert stored["jobs"][0]["fileCount"] == 10
 
 
+def test_named_download_url():
+    url = (
+        "https://x.download.real-debrid.com/d/ABC/"
+        "Pokemon%20-%20Emerald%20Version%20%28USA%2C%20Europe%29.zip"
+    )
+    name = "Pokemon - Emerald Version (USA, Europe).zip"
+    out = named_download_url(url, name)
+    assert out.endswith("/" + name)
+    assert "%20" not in out
+    assert out.count(".zip") == 1
+    assert safe_filename("Pokemon%20-%20Emerald%20Version%20%28USA%2C%20Europe%29.zip") == name
+    encoded_only = named_download_url(url, "")
+    assert encoded_only.endswith("/" + name)
+
+
 if __name__ == "__main__":
     handle, path = tempfile.mkstemp(suffix=".json")
     os.close(handle)
@@ -193,6 +209,7 @@ if __name__ == "__main__":
         test_instant_miss_still_adds()
         test_sync_config_keeps_token()
         test_save_store_strips_files()
+        test_named_download_url()
     finally:
         try:
             os.remove(path)
