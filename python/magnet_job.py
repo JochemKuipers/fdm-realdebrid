@@ -390,17 +390,20 @@ def job_files(job_id, offset=0, limit=FILE_PAGE):
     }
 
 
-def _wait(client, job_id, torrent_id, poll_interval, max_wait, done_statuses):
+def _wait(client, job_id, torrent_id, poll_interval, max_wait, done_statuses) -> dict:
     deadline = time.time() + max_wait
     while time.time() < deadline:
         info = client.get_torrent_info(torrent_id)
+        if not isinstance(info, dict):
+            raise RealDebridError("Real-Debrid returned no torrent info")
         status = info.get("status")
+        current = get_job(job_id) or {}
         update_job(
             job_id,
             status=status or "queued",
             progress=int(info.get("progress") or 0),
             filename=info.get("filename") or info.get("original_filename") or "",
-            files=file_rows(info, set(get_job(job_id).get("cachedIds") or [])),
+            files=file_rows(info, set(current.get("cachedIds") or [])),
         )
         if status in done_statuses:
             return info
@@ -415,7 +418,7 @@ def _wait(client, job_id, torrent_id, poll_interval, max_wait, done_statuses):
 def _wait_for_selection(job_id):
     deadline = time.time() + SELECTION_WAIT_SEC
     while time.time() < deadline:
-        job = get_job(job_id)
+        job = get_job(job_id) or {}
         selected = job.get("selected") or []
         if selected:
             return selected
@@ -456,9 +459,9 @@ def run_job(job_id):
         client.select_torrent_files(torrent_id, files_param)
         info = _wait(client, job_id, torrent_id, poll, max_wait, {"downloaded"})
 
-    info = dict(info)
-    info["magnet"] = job.get("magnet") or ""
-    _result, urls = unrestrict_links(client, config, info)
+    payload = dict(info)
+    payload["magnet"] = job.get("magnet") or ""
+    _result, urls = unrestrict_links(client, config, payload)
     send_to_fdm(urls)
     update_job(job_id, status="done", progress=100, error="")
 

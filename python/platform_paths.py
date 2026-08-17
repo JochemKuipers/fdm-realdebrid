@@ -1,6 +1,7 @@
 import os
 import shutil
 import sys
+from typing import Any
 
 
 def _expand(path):
@@ -82,7 +83,7 @@ def find_addon_root(repo_root=None):
     return None
 
 
-def detached_popen_kwargs():
+def detached_popen_kwargs() -> dict[str, Any]:
     if sys.platform == "win32":
         return {
             "creationflags": 0x08000000 | 0x00000008,  # CREATE_NO_WINDOW | DETACHED
