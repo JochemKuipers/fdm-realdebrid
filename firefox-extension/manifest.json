@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Real-Debrid Magnets for FDM",
-  "version": "1.0.1",
-  "description": "Capture magnet links in Firefox and send them to Free Download Manager for Real-Debrid processing.",
+  "version": "1.1.0",
+  "description": "Capture magnet links, pick files, and watch Real-Debrid hand them to Free Download Manager.",
   "browser_specific_settings": {
     "gecko": {
       "id": "fdm-realdebrid-magnets@jochem.local",
@@ -11,7 +11,6 @@
   },
   "permissions": [
     "nativeMessaging",
-    "notifications",
     "contextMenus",
     "storage"
   ],
@@ -36,12 +35,16 @@
     }
   ],
   "action": {
-    "default_title": "Real-Debrid magnets for FDM (enabled)",
+    "default_title": "Magnet dock",
+    "default_popup": "popup.html",
     "default_icon": {
       "48": "icons/icon-48.png"
     }
   },
   "icons": {
     "48": "icons/icon-48.png"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com;"
   }
 }

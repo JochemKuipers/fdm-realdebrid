@@ -1,65 +1,70 @@
 const NATIVE_HOST = "com.fdmrealdebrid.magnet";
-const ICON = "icons/icon-48.png";
 
 let enabled = true;
+let pollTimer = null;
 
 browser.storage.local.get("enabled").then(function (stored) {
   if (typeof stored.enabled === "boolean") {
     enabled = stored.enabled;
   }
-  updateActionTitle();
+  refreshBadge();
+  startPoll(false);
 });
 
-browser.action.onClicked.addListener(function () {
-  enabled = !enabled;
-  browser.storage.local.set({ enabled: enabled });
-  updateActionTitle();
-  notify(
-    enabled ? "Magnet capture enabled" : "Magnet capture disabled",
-    enabled
-      ? "Magnet links will be sent to FDM."
-      : "Magnet links will use the browser default handler.",
-  );
+browser.storage.onChanged.addListener(function (changes) {
+  if (changes.enabled) {
+    enabled = changes.enabled.newValue !== false;
+  }
 });
 
-function updateActionTitle() {
-  browser.action.setTitle({
-    title: enabled
-      ? "Real-Debrid magnets for FDM (enabled)"
-      : "Real-Debrid magnets for FDM (disabled)",
+function native(message) {
+  return browser.runtime.sendNativeMessage(NATIVE_HOST, message);
+}
+
+function activeJobs(jobs) {
+  return (jobs || []).filter(function (job) {
+    return job.status !== "done" && job.status !== "error";
   });
 }
 
-function notify(title, message) {
-  browser.notifications.create({
-    type: "basic",
-    iconUrl: ICON,
-    title: title,
-    message: message,
-  });
-}
-
-function showError(error) {
-  notify(
-    "FDM magnet handoff failed",
-    String(error && error.message ? error.message : error),
-  );
-}
-
-function sendMagnetToFdm(magnetUrl) {
-  return browser.runtime
-    .sendNativeMessage(NATIVE_HOST, { url: magnetUrl })
+function refreshBadge() {
+  return native({ cmd: "status" })
     .then(function (response) {
-      if (!response || !response.success) {
-        throw new Error((response && response.error) || "Native host failed");
-      }
-      notify(
-        "Sent to Real-Debrid",
-        response.message ||
-          "FDM will add the download(s) when Real-Debrid finishes (this can take several minutes).",
-      );
-      return response;
+      const jobs = (response && response.jobs) || [];
+      const live = activeJobs(jobs);
+      const needs = live.some(function (job) {
+        return job.status === "needs_selection";
+      });
+      browser.action.setBadgeBackgroundColor({
+        color: needs ? "#D9772C" : "#3D6B5A",
+      });
+      browser.action.setBadgeText({
+        text: needs ? "!" : live.length ? String(live.length) : "",
+      });
+      startPoll(live.length > 0);
+    })
+    .catch(function () {
+      browser.action.setBadgeBackgroundColor({ color: "#D9772C" });
+      browser.action.setBadgeText({ text: "?" });
+      startPoll(false);
     });
+}
+
+function startPoll(fast) {
+  if (pollTimer) {
+    clearInterval(pollTimer);
+  }
+  pollTimer = setInterval(refreshBadge, fast ? 2000 : 15000);
+}
+
+function sendMagnet(magnetUrl) {
+  return native({ cmd: "enqueue", url: magnetUrl }).then(function (response) {
+    if (!response || response.ok === false) {
+      throw new Error((response && response.error) || "Native host failed");
+    }
+    refreshBadge();
+    return response;
+  });
 }
 
 browser.runtime.onMessage.addListener(function (message, sender, sendResponse) {
@@ -72,13 +77,12 @@ browser.runtime.onMessage.addListener(function (message, sender, sendResponse) {
     return false;
   }
 
-  sendMagnetToFdm(message.url)
+  sendMagnet(message.url)
     .then(function () {
       sendResponse({ success: true });
     })
     .catch(function (error) {
       sendResponse({ success: false, error: error.message });
-      showError(error);
     });
 
   return true;
@@ -93,6 +97,8 @@ browser.contextMenus.create({
 
 browser.contextMenus.onClicked.addListener(function (info) {
   if (info.menuItemId === "send-magnet-fdm" && info.linkUrl) {
-    sendMagnetToFdm(info.linkUrl).catch(showError);
+    sendMagnet(info.linkUrl).catch(function () {
+      refreshBadge();
+    });
   }
 });

@@ -1,33 +1,15 @@
 import json
 import os
 import sys
-import time
 import urllib.parse
 
 from config_loader import load_config
-from fdm_result import (
-    container_playlist,
-    folder_playlist,
-    single_media,
-    torrent_playlist,
-)
+from fdm_result import container_playlist, folder_playlist, single_media
+from magnet_job import QueuedJob, load_store, start_torrent_job
 from result_cache import get_cached, set_cached
 from rd_client import RealDebridClient, RealDebridError
 
 CONTAINER_EXTENSIONS = (".dlc", ".ccf", ".ccfz", ".rsdf")
-TORRENT_FAIL_STATUSES = {
-    "magnet_error",
-    "error",
-    "virus",
-    "dead",
-}
-TORRENT_WAIT_STATUSES = {
-    "magnet_conversion",
-    "queued",
-    "downloading",
-    "compressing",
-    "uploading",
-}
 
 
 def emit_result(result):
@@ -94,71 +76,6 @@ def normalize_container_links(response):
     return []
 
 
-def wait_for_torrent(client, torrent_id, poll_interval, max_wait):
-    deadline = time.time() + max_wait
-    torrent_id = str(torrent_id)
-
-    while time.time() < deadline:
-        info = client.get_torrent_info(torrent_id)
-        status = info.get("status")
-
-        if status == "waiting_files_selection":
-            return info
-        if status == "downloaded":
-            return info
-        if status in TORRENT_FAIL_STATUSES:
-            raise RealDebridError(f"Torrent failed on Real-Debrid ({status})")
-
-        if status not in TORRENT_WAIT_STATUSES and status is not None:
-            raise RealDebridError(f"Unexpected torrent status: {status}")
-
-        time.sleep(poll_interval)
-
-    raise RealDebridError(
-        "Torrent still processing on Real-Debrid — try again later"
-    )
-
-
-def ensure_torrent_ready(client, config, torrent_info):
-    torrent_id = torrent_info["id"]
-    info = wait_for_torrent(
-        client,
-        torrent_id,
-        config["torrentPollIntervalSec"],
-        config["torrentMaxWaitSec"],
-    )
-
-    if info.get("status") == "waiting_files_selection":
-        files = "all" if config["selectAllTorrentFiles"] else "all"
-        client.select_torrent_files(torrent_id, files)
-        info = wait_for_torrent(
-            client,
-            torrent_id,
-            config["torrentPollIntervalSec"],
-            config["torrentMaxWaitSec"],
-        )
-
-    links = info.get("links") or []
-    if not links:
-        raise RealDebridError("Torrent finished but Real-Debrid returned no links")
-
-    return info
-
-
-def unrestrict_all(client, config, links):
-    remote = config["useRemoteTraffic"]
-    unrestricted = []
-
-    for link in links:
-        result = client.unrestrict_link(link, remote=remote)
-        download_url = result.get("download")
-        if not download_url:
-            raise RealDebridError("Real-Debrid did not return a download link")
-        unrestricted.append(result)
-
-    return unrestricted
-
-
 def handle_hoster(client, config, url):
     cached = get_cached(url)
     if cached:
@@ -188,32 +105,11 @@ def handle_container(client, url):
 
 
 def handle_torrent(client, config, url, cookies=""):
-    cached = get_cached(url)
-    if cached:
-        return cached
-
-    if is_magnet(url):
-        added = client.add_magnet(url)
-    else:
-        torrent_bytes = client.download_bytes(url, cookies)
-        added = client.add_torrent_file(torrent_bytes)
-
-    info = ensure_torrent_ready(client, config, added)
-    unrestricted = unrestrict_all(client, config, info.get("links") or [])
-
-    if config["deleteTorrentAfter"]:
-        try:
-            client.delete_torrent(info["id"])
-        except RealDebridError:
-            pass
-
-    result = torrent_playlist(
-        webpage_url=url,
-        unrestricted_items=unrestricted,
-        title=info.get("filename") or info.get("original_filename") or "Real-Debrid torrent",
-    )
-    set_cached(url, result)
-    return result
+    result = start_torrent_job(client, config, url, cookies)
+    if result is not None:
+        return result
+    jobs = load_store().get("jobs") or []
+    raise QueuedJob(jobs[0]["id"] if jobs else "")
 
 
 def parse_url(url, mode="auto", cookies=""):
@@ -256,6 +152,8 @@ def main():
 
     try:
         emit_result(parse_url(url, mode="auto", cookies=cookies))
+    except QueuedJob as error:
+        emit_error(str(error))
     except RealDebridError as error:
         emit_error(str(error))
     except Exception as error:

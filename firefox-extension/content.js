@@ -20,11 +20,16 @@
       event.stopPropagation();
       event.stopImmediatePropagation();
 
-      browser.runtime.sendMessage({ type: "magnet", url: magnet }).then(function (response) {
-        if (response && response.skipped) {
+      browser.runtime
+        .sendMessage({ type: "magnet", url: magnet })
+        .then(function (response) {
+          if (response && response.skipped) {
+            window.location.href = magnet;
+          }
+        })
+        .catch(function () {
           window.location.href = magnet;
-        }
-      });
+        });
     },
     true
   );

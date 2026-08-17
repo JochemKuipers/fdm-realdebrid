@@ -40,7 +40,6 @@ Free Download Manager add-on that uses [Real-Debrid](https://real-debrid.com/) t
    {
      "apiToken": "YOUR_REAL_DEBRID_TOKEN",
      "useRemoteTraffic": false,
-     "selectAllTorrentFiles": true,
      "deleteTorrentAfter": false,
      "torrentPollIntervalSec": 5,
      "torrentMaxWaitSec": 900
@@ -59,11 +58,11 @@ Paste a URL into FDM's **Add Download** dialog:
 | Folder link  | Mega/Mediafire folder URLs                                  |
 | Magnet       | `magnet:?xt=urn:btih:...` (paste into FDM **Add Download**) |
 | Torrent file | `https://example.com/file.torrent`                          |
-
-**Magnet links:** paste the full magnet URL into FDM's **Add Download** dialog (Ctrl+N). FDM may also offer its built-in torrent handler for magnets — if prompted, the Real-Debrid add-on should take priority. Processing can take several minutes while Real-Debrid fetches the torrent; keep FDM open and wait for the dialog to finish.
-| Container | `.dlc`, `.ccf`, `.ccfz`, `.rsdf` links |
+| Container    | `.dlc`, `.ccf`, `.ccfz`, `.rsdf` links                      |
 
 The add-on unrestricts the link through Real-Debrid and returns a direct download URL for FDM.
+
+**Magnet and torrent files:** FDM's add-download dialog returns immediately. Real-Debrid work continues in the background. Open the Firefox companion popup to pick files and watch progress. When Real-Debrid is done, HTTPS download URLs are sent to FDM with `fdm -fs` (never the raw magnet). If the torrent is already downloaded on your Real-Debrid account, FDM still fills the dialog as usual.
 
 ## Firefox browser extension
 
@@ -96,7 +95,7 @@ HTTP hoster links work through the official FDM Firefox extension. **Magnet link
 2. Load `firefox-extension/manifest.json` via `about:debugging`
 3. Restart Firefox
 
-Clicking a magnet link sends it to FDM via `fdm -fs`, and the Real-Debrid add-on processes it there.
+Click a magnet (or paste one in FDM). The toolbar popup is the control surface: what is configured, which files to take, and live Real-Debrid progress. Finished files are unrestricted HTTPS URLs sent to FDM with `fdm -fs`.
 
 ## Manual test checklist
 
@@ -116,7 +115,7 @@ Clicking a magnet link sends it to FDM via `fdm -fs`, and the Real-Debrid add-on
 
 4. **Magnet link**
    - Paste a small magnet link
-   - Expected: add-on waits while Real-Debrid converts the torrent, then returns download link(s)
+   - Expected: FDM dialog returns immediately; the Firefox popup shows the waybill. Pick files (or wait 60s for all). Downloads appear in FDM when Real-Debrid finishes.
 
 5. **Unavailable host**
    - Paste a link from a host that Real-Debrid marks offline
@@ -135,15 +134,16 @@ python/
   fdm_result.py
   parse.py
   parse_folder.py
+  magnet_job.py
+  test_magnet.py
 scripts/build-fda.sh
 scripts/build-fda.ps1
 ```
 
 ## Limitations
 
-- No automatic link detection on web pages (paste URLs manually)
-- No in-app settings UI (`config.json` only)
-- Torrent conversion blocks while Real-Debrid processes the torrent
+- No automatic hoster-link detection on web pages (paste URLs manually, or use FDM's official browser extension)
+- No in-app settings UI for the FDM add-on (`config.json` only; the Firefox popup shows the current values)
 - Magnet URLs only work if FDM routes them to add-ons
 - HLS/M3U8 streams are not supported
 

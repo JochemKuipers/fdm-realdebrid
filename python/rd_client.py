@@ -8,9 +8,10 @@ API_BASE = "https://api.real-debrid.com/rest/1.0"
 
 
 class RealDebridError(Exception):
-    def __init__(self, message, status_code=None):
+    def __init__(self, message, status_code=None, error_code=None):
         super().__init__(message)
         self.status_code = status_code
+        self.error_code = error_code
 
 
 def map_http_error(status_code, message):
@@ -65,12 +66,16 @@ class RealDebridClient:
                 return json.loads(content.decode("utf-8"))
         except urllib.error.HTTPError as error:
             payload = error.read().decode("utf-8", errors="replace")
+            error_code = None
             try:
                 parsed = json.loads(payload)
                 message = parsed.get("error", payload)
+                error_code = parsed.get("error_code")
             except json.JSONDecodeError:
                 message = payload or error.reason
-            raise RealDebridError(map_http_error(error.code, message), error.code) from error
+            raise RealDebridError(
+                map_http_error(error.code, message), error.code, error_code
+            ) from error
         except urllib.error.URLError as error:
             raise RealDebridError(f"Network error contacting Real-Debrid: {error.reason}") from error
 
@@ -129,6 +134,12 @@ class RealDebridClient:
             raw_body=body,
             headers=headers,
         )
+
+    def list_torrents(self, limit=100):
+        return self._request("GET", f"/torrents?limit={int(limit)}") or []
+
+    def instant_availability(self, torrent_hash):
+        return self._request("GET", f"/torrents/instantAvailability/{torrent_hash}")
 
     def get_torrent_info(self, torrent_id):
         return self._request("GET", f"/torrents/info/{torrent_id}")

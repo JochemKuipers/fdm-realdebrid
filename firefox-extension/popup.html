@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Magnet dock</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header class="mast">
+      <div>
+        <p class="eyebrow">Real-Debrid · FDM</p>
+        <h1>Dock</h1>
+      </div>
+      <label class="switch">
+        <input id="capture" type="checkbox" />
+        <span>Capture</span>
+      </label>
+    </header>
+
+    <p id="banner" class="banner" hidden></p>
+
+    <section class="sheet" aria-labelledby="configured-title">
+      <h2 id="configured-title">Configured</h2>
+      <dl id="config" class="meta"></dl>
+    </section>
+
+    <section class="lanes" aria-labelledby="waybills-title">
+      <div class="lanes-head">
+        <h2 id="waybills-title">Waybills</h2>
+        <p id="lane-count" class="count"></p>
+      </div>
+      <div id="jobs"></div>
+    </section>
+
+    <script src="popup.js"></script>
+  </body>
+</html>

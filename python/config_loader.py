@@ -8,7 +8,6 @@ EXAMPLE_CONFIG_PATH = os.path.join(ADDON_ROOT, "config.example.json")
 DEFAULT_CONFIG = {
     "apiToken": "",
     "useRemoteTraffic": False,
-    "selectAllTorrentFiles": True,
     "deleteTorrentAfter": False,
     "torrentPollIntervalSec": 5,
     "torrentMaxWaitSec": 900,
@@ -40,8 +39,30 @@ def load_config():
 
     config["apiToken"] = token
     config["useRemoteTraffic"] = 1 if config.get("useRemoteTraffic") else 0
-    config["selectAllTorrentFiles"] = bool(config.get("selectAllTorrentFiles", True))
     config["deleteTorrentAfter"] = bool(config.get("deleteTorrentAfter", False))
     config["torrentPollIntervalSec"] = max(1, int(config.get("torrentPollIntervalSec", 5)))
     config["torrentMaxWaitSec"] = max(30, int(config.get("torrentMaxWaitSec", 900)))
     return config
+
+
+def public_config():
+    result = {
+        "tokenSet": False,
+        "useRemoteTraffic": False,
+        "deleteTorrentAfter": False,
+        "torrentPollIntervalSec": DEFAULT_CONFIG["torrentPollIntervalSec"],
+        "torrentMaxWaitSec": DEFAULT_CONFIG["torrentMaxWaitSec"],
+        "error": "",
+    }
+    try:
+        config = load_config()
+    except (OSError, RuntimeError, ValueError, json.JSONDecodeError) as error:
+        result["error"] = str(error)
+        return result
+
+    result["tokenSet"] = True
+    result["useRemoteTraffic"] = bool(config["useRemoteTraffic"])
+    result["deleteTorrentAfter"] = config["deleteTorrentAfter"]
+    result["torrentPollIntervalSec"] = config["torrentPollIntervalSec"]
+    result["torrentMaxWaitSec"] = config["torrentMaxWaitSec"]
+    return result

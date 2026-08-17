@@ -1,18 +1,19 @@
 # Real-Debrid Magnets for FDM (Firefox)
 
-Companion Firefox extension that captures **magnet links** and sends them to Free Download Manager. FDM then hands the magnet to the **fdm-realdebrid** add-on for Real-Debrid processing.
+Companion Firefox extension that captures **magnet links**, shows configuration and live Real-Debrid progress in the toolbar popup, and sends finished HTTPS downloads to Free Download Manager.
 
 ## How it works
 
 ```text
-Click magnet link in Firefox
-  -> extension sends magnet to native host
-  -> native host runs the Real-Debrid FDM add-on parser in the background
-  -> when RD is ready, direct HTTPS links are sent to FDM with fdm -fs
+Click magnet link in Firefox  (or paste a magnet in FDM)
+  -> job is written to jobs.json
+  -> worker talks to Real-Debrid (instant check, add or reuse, poll)
+  -> popup: pick files, watch progress
+  -> unrestricted HTTPS links are sent to FDM with fdm -fs
   -> FDM downloads via Real-Debrid (not the built-in torrent client)
 ```
 
-Magnet URLs cannot go straight to `fdm` because FDM routes those to its built-in BitTorrent handler. The native host unrestricts through Real-Debrid first, then passes the resulting download URLs to FDM.
+Magnet URLs cannot go straight to `fdm` because FDM routes those to its built-in BitTorrent handler.
 
 ## Setup
 
@@ -58,28 +59,30 @@ Restart Firefox after installing the native host so it picks up the manifest.
 
 ## Usage
 
-- **Click any magnet link** on a web page — it is sent to FDM instead of your default torrent client
+- Open the **toolbar popup** — that is the UI. It shows what is configured (native host, FDM, add-on, token set, poll/wait) and every waybill in flight.
+- **Click any magnet link** on a web page — it is queued instead of opening your default torrent client
 - **Right-click a magnet link** → **Send magnet to FDM (Real-Debrid)**
-- **Toolbar button** toggles capture on/off (if disabled, magnet links behave normally)
+- Turn **Capture** off in the popup if magnet links should use the browser default
+- When a waybill says **pick files**, check the cargo lines and click **Send to FDM**. Cached files are stamped. If you pick nothing for 60 seconds, all files are selected.
 
-When FDM receives the magnet, wait while Real-Debrid processes the torrent (this can take several minutes).
+The toolbar badge is the live count (`N`) or `!` when a file pick is waiting.
 
 ## Troubleshooting
 
 | Problem                                               | Fix                                                                                                    |
 | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| "No such native application com.fdmrealdebrid.magnet" | Re-run the install script, then **fully restart Firefox**                                              |
-| "Could not find fdm"                                  | Install FDM or edit `FDM_CANDIDATES` in `python/platform_paths.py`                                     |
+| Popup says native host missing                        | Re-run the install script, then **fully restart Firefox**                                              |
+| "Could not find fdm"                                  | Install FDM or edit `fdm_candidates` in `python/platform_paths.py`                                     |
 | FDM uses built-in torrent instead of Real-Debrid      | Re-run the install script so the updated native host is installed                                      |
-| Worker failed silently                                | Check `~/.local/share/fdm-realdebrid/native-host/magnet-worker.log` (Linux) or `%LOCALAPPDATA%\fdm-realdebrid\native-host\magnet-worker.log` (Windows) |
+| Token / add-on rows are red                           | Install the FDM add-on and set `apiToken` in its `config.json`                                         |
 | Extension disappears after restart                    | Temporary add-ons unload on restart — reload via `about:debugging`                                     |
 
 ## Files
 
+- `popup.html` / `popup.css` / `popup.js` — toolbar dock (config + waybills)
 - `manifest.json` — Firefox extension manifest
 - `content.js` — intercepts magnet link clicks
-- `background.js` — sends magnets to the native host
-- `native-host/fdm_rd_magnet.py` — native messaging entry point
-- `native-host/fdm_rd_magnet_worker.py` — unrestricts magnets and sends URLs to FDM
+- `background.js` — enqueue + badge
+- `native-host/fdm_rd_magnet.py` — native messaging router (`enqueue`, `status`, `selectFiles`)
 - `scripts/install-native-host.sh` — registers the native host with Firefox (Linux / macOS)
 - `scripts/install-native-host.ps1` — registers the native host with Firefox (Windows)

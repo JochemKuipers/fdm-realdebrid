@@ -124,6 +124,14 @@ var msParser = (function () {
     return MAGNET_PATTERN.test(url);
   }
 
+  function normalizeMagnet(url) {
+    var match = /xt=urn:btih:([a-zA-Z0-9]+)/i.exec(url || "");
+    if (!match) {
+      return url;
+    }
+    return "magnet:?xt=urn:btih:" + match[1];
+  }
+
   function isTorrentFileUrl(url) {
     return /^https?:\/\//i.test(url) && TORRENT_PATTERN.test(url);
   }
@@ -158,7 +166,7 @@ var msParser = (function () {
 
   function launchParser(scriptPath) {
     return function (obj) {
-      var args = [obj.url];
+      var args = [isMagnetUrl(obj.url) ? normalizeMagnet(obj.url) : obj.url];
       if (obj.cookie) {
         args.push(obj.cookie);
       }
