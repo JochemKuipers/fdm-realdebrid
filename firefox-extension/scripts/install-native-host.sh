@@ -5,9 +5,14 @@ root="$(cd "$(dirname "$0")/.." && pwd)"
 repo_root="$(cd "$root/.." && pwd)"
 native_host_dir="$root/native-host"
 install_dir="${XDG_DATA_HOME:-$HOME/.local/share}/fdm-realdebrid/native-host"
-manifest_dir="${XDG_CONFIG_HOME:-$HOME/.config}/mozilla/native-messaging-hosts"
-manifest_path="$manifest_dir/com.fdmrealdebrid.magnet.json"
 launcher="$install_dir/fdm_rd_magnet.sh"
+
+if [[ "$(uname -s)" == "Darwin" ]]; then
+    manifest_dir="$HOME/Library/Application Support/Mozilla/NativeMessagingHosts"
+else
+    manifest_dir="$HOME/.mozilla/native-messaging-hosts"
+fi
+manifest_path="$manifest_dir/com.fdmrealdebrid.magnet.json"
 
 if [[ ! -f "$native_host_dir/fdm_rd_magnet.py" ]]; then
     echo "Missing native host script: $native_host_dir/fdm_rd_magnet.py" >&2

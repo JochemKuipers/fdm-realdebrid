@@ -43,7 +43,7 @@ This installs the launcher under `~/.local/share/fdm-realdebrid/native-host/` (L
 
 On **Windows**, Firefox also requires a registry entry under `HKCU\Software\Mozilla\NativeMessagingHosts\` — the install script creates this automatically.
 
-On **Linux / macOS**, the manifest is written to `~/.config/mozilla/native-messaging-hosts/`.
+On **Linux**, the manifest is written to `~/.mozilla/native-messaging-hosts/`. On **macOS**, it is written to `~/Library/Application Support/Mozilla/NativeMessagingHosts/`.
 
 ### 3. Load the Firefox extension
 
