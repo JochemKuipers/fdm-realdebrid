@@ -1,10 +1,15 @@
 import json
+import ssl
 import uuid
 import urllib.error
 import urllib.parse
 import urllib.request
 
 API_BASE = "https://api.real-debrid.com/rest/1.0"
+
+# Python 3.13+ VERIFY_X509_STRICT rejects RD certs missing Authority Key Identifier.
+_SSL = ssl.create_default_context()
+_SSL.verify_flags &= ~ssl.VERIFY_X509_STRICT
 
 
 class RealDebridError(Exception):
@@ -59,7 +64,7 @@ class RealDebridClient:
         request = urllib.request.Request(url, data=body, headers=req_headers, method=method)
 
         try:
-            with urllib.request.urlopen(request, timeout=120) as response:
+            with urllib.request.urlopen(request, timeout=120, context=_SSL) as response:
                 content = response.read()
                 if not expect_json or not content:
                     return None
@@ -166,7 +171,7 @@ class RealDebridClient:
             headers["Cookie"] = cookies.replace("\n", "; ")
         request = urllib.request.Request(url, headers=headers)
         try:
-            with urllib.request.urlopen(request, timeout=120) as response:
+            with urllib.request.urlopen(request, timeout=120, context=_SSL) as response:
                 return response.read()
         except urllib.error.HTTPError as error:
             payload = error.read().decode("utf-8", errors="replace")
