@@ -62,7 +62,7 @@ Paste a URL into FDM's **Add Download** dialog:
 
 The add-on unrestricts the link through Real-Debrid and returns a direct download URL for FDM.
 
-**Magnet and torrent files:** FDM's add-download dialog returns immediately. Real-Debrid work continues in the background. Open the Firefox companion popup to pick files and watch progress. When Real-Debrid is done, HTTPS download URLs are sent to FDM with `fdm -fs` (never the raw magnet). If the torrent is already downloaded on your Real-Debrid account, FDM still fills the dialog as usual.
+**Magnet and torrent files:** FDM's add-download dialog returns immediately. Real-Debrid work continues in the background. Open the companion popup (Firefox or Chromium) to pick files and watch progress. When Real-Debrid is done, HTTPS download URLs are sent to FDM with `fdm -fs` (never the raw magnet). If the torrent is already downloaded on your Real-Debrid account, FDM still fills the dialog as usual.
 
 ## Firefox browser extension
 
@@ -75,27 +75,28 @@ The add-on also works when downloads are captured from Firefox via the FDM exten
 
 When the browser sends a direct file URL, FDM uses the add-on's `isPossiblySupportedSource` handler. The embedded host list in `rd-domains.js` makes that work immediately without waiting for a network fetch.
 
-## Firefox magnet links
+## Magnet companion extensions
 
-HTTP hoster links work through the official FDM Firefox extension. **Magnet links need the companion extension** in [`firefox-extension/`](firefox-extension/README.md):
+HTTP hoster links work through the official FDM browser extension. **Magnet links need a companion extension:**
 
-1. Run the native host installer:
+| Browser | Folder | Notes |
+| --- | --- | --- |
+| Firefox | [`firefox-extension/`](firefox-extension/README.md) | Also registers as a `magnet:` protocol handler |
+| Chrome / Chromium / Vivaldi | [`chromium-extension/`](chromium-extension/README.md) | Click capture + context menu only (no `magnet:` protocol ownership) |
 
-   **Linux / macOS:**
+**Firefox**
 
-   ```bash
-   ./firefox-extension/scripts/install-native-host.sh
-   ```
-
-   **Windows (PowerShell):**
-
-   ```powershell
-   .\firefox-extension\scripts\install-native-host.ps1
-   ```
+1. Run `./firefox-extension/scripts/install-native-host.sh` (or the Windows `.ps1`)
 2. Load `firefox-extension/manifest.json` via `about:debugging`
 3. Restart Firefox
 
-Click a magnet (or paste one in FDM). The toolbar popup is the control surface: what is configured, which files to take, and live Real-Debrid progress. Finished files are unrestricted HTTPS URLs sent to FDM with `fdm -fs`.
+**Chrome / Chromium / Vivaldi**
+
+1. Run `./chromium-extension/scripts/install-native-host.sh` (or the Windows `.ps1`)
+2. Load the `chromium-extension/` folder via `chrome://extensions` / `vivaldi://extensions` (Developer mode → Load unpacked)
+3. Restart the browser
+
+Click a magnet on a page (or paste one in FDM). The toolbar popup is the control surface: what is configured, which files to take, and live Real-Debrid progress. Finished files are unrestricted HTTPS URLs sent to FDM with `fdm -fs`.
 
 ## Manual test checklist
 
@@ -115,7 +116,7 @@ Click a magnet (or paste one in FDM). The toolbar popup is the control surface: 
 
 4. **Magnet link**
    - Paste a small magnet link
-   - Expected: FDM dialog returns immediately; the Firefox popup shows the waybill. Pick files (or wait 60s for all). Downloads appear in FDM when Real-Debrid finishes.
+   - Expected: FDM dialog returns immediately; the companion popup shows the waybill. Pick files (or wait 60s for all). Downloads appear in FDM when Real-Debrid finishes.
 
 5. **Unavailable host**
    - Paste a link from a host that Real-Debrid marks offline
@@ -136,6 +137,8 @@ python/
   parse_folder.py
   magnet_job.py
   test_magnet.py
+firefox-extension/
+chromium-extension/
 scripts/build-fda.sh
 scripts/build-fda.ps1
 ```
@@ -143,7 +146,8 @@ scripts/build-fda.ps1
 ## Limitations
 
 - No automatic hoster-link detection on web pages (paste URLs manually, or use FDM's official browser extension)
-- No in-app settings UI for the FDM add-on (`config.json` only; the Firefox popup shows the current values)
+- No in-app settings UI for the FDM add-on (`config.json` only; the companion popup shows the current values)
+- Chromium companions cannot own the OS/`magnet:` protocol — use in-page clicks, the context menu, or paste into FDM
 - Magnet URLs only work if FDM routes them to add-ons
 - HLS/M3U8 streams are not supported
 

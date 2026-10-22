@@ -4,3 +4,5 @@ dist/
 __pycache__/
 *.pyc
 .python-version
+chromium-extension/key.pem
+chromium-extension/.public-key-b64
