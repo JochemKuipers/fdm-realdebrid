@@ -82,7 +82,7 @@ HTTP hoster links work through the official FDM browser extension. **Magnet link
 | Browser | Folder | Notes |
 | --- | --- | --- |
 | Firefox | [`firefox-extension/`](firefox-extension/README.md) | Also registers as a `magnet:` protocol handler |
-| Chrome / Chromium / Vivaldi | [`chromium-extension/`](chromium-extension/README.md) | Click capture + context menu only (no `magnet:` protocol ownership) |
+| Chrome / Chromium / Vivaldi | [`chromium-extension/`](chromium-extension/README.md) | Click + context menu; experimental `magnet:` handler via Chrome 146+ flag |
 
 **Firefox**
 
@@ -147,7 +147,7 @@ scripts/build-fda.ps1
 
 - No automatic hoster-link detection on web pages (paste URLs manually, or use FDM's official browser extension)
 - No in-app settings UI for the FDM add-on (`config.json` only; the companion popup shows the current values)
-- Chromium companions cannot own the OS/`magnet:` protocol — use in-page clicks, the context menu, or paste into FDM
+- Chromium `magnet:` protocol ownership needs Chrome 146+ and `--enable-features=ExtensionProtocolHandlers` (see [`chromium-extension/README.md`](chromium-extension/README.md)); otherwise use clicks, context menu, or paste into FDM
 - Magnet URLs only work if FDM routes them to add-ons
 - HLS/M3U8 streams are not supported
 

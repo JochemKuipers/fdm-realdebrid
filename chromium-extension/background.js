@@ -153,7 +153,17 @@ chrome.tabs.onRemoved.addListener(async function (tabId) {
   }
 });
 
-chrome.runtime.onMessage.addListener(function (message, _sender, sendResponse) {
+function leaveHandlerTab(tabId) {
+  chrome.tabs.goBack(tabId).catch(function () {
+    chrome.tabs.get(tabId).then(function (tab) {
+      if (tab.url && tab.url.indexOf("handler.html") !== -1) {
+        chrome.tabs.remove(tabId);
+      }
+    });
+  });
+}
+
+chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
   if (message.type !== "magnet" || !message.url) {
     return false;
   }
@@ -166,6 +176,13 @@ chrome.runtime.onMessage.addListener(function (message, _sender, sendResponse) {
   sendMagnet(message.url)
     .then(function () {
       openDock();
+      if (
+        sender.tab &&
+        sender.tab.url &&
+        sender.tab.url.indexOf("handler.html") !== -1
+      ) {
+        leaveHandlerTab(sender.tab.id);
+      }
       sendResponse({ success: true });
     })
     .catch(function (error) {

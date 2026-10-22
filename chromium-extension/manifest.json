@@ -30,6 +30,13 @@
       "all_frames": true
     }
   ],
+  "protocol_handlers": [
+    {
+      "protocol": "magnet",
+      "name": "Real-Debrid Magnets for FDM",
+      "uriTemplate": "chrome-extension://ijimlcmjkddnimablogpkmgopalomlfn/handler.html?url=%s"
+    }
+  ],
   "action": {
     "default_title": "Magnet dock",
     "default_popup": "popup.html",
